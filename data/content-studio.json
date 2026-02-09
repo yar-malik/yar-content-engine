@@ -78,6 +78,27 @@
       "platform": "linkedin",
       "url": "https://www.linkedin.com/in/shehubarefin/",
       "createdAt": "2026-02-09T22:27:19.900Z"
+    },
+    {
+      "id": "cf2a190f-e8c1-40f2-a137-176851d58ec7",
+      "name": "mikefutia",
+      "platform": "twitter",
+      "url": "https://x.com/mikefutia",
+      "createdAt": "2026-02-09T22:51:39.000Z"
+    },
+    {
+      "id": "ef00fc7f-8d5a-4b45-b129-288dbd9ea941",
+      "name": "romanbuildsaas",
+      "platform": "twitter",
+      "url": "https://x.com/romanbuildsaas",
+      "createdAt": "2026-02-09T22:51:39.000Z"
+    },
+    {
+      "id": "20b1ef40-f2e5-4f8d-9825-c119d631d048",
+      "name": "pierreeliottlal",
+      "platform": "twitter",
+      "url": "https://x.com/pierreeliottlal",
+      "createdAt": "2026-02-09T22:51:39.000Z"
     }
   ]
 }

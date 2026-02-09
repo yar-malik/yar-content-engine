@@ -133,7 +133,7 @@ export async function generatePosts(
         Authorization: `Bearer ${apiKey}`,
       },
       body: JSON.stringify({
-        model: process.env.OPENAI_MODEL || 'gpt-4.1-mini',
+        model: 'gpt-4o-mini',
         input: [
           { role: 'system', content: systemPrompt },
           { role: 'user', content: userPrompt },
