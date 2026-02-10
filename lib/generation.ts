@@ -1,4 +1,4 @@
-import type { LibraryItem, Platform } from '@/lib/content-studio';
+import type { LibraryItem, Platform } from './content-studio';
 
 export interface GenerateInput {
   platform: Platform;

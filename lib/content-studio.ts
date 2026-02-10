@@ -15,7 +15,7 @@ export interface LibraryItem {
 export interface CreatorSource {
   id: string;
   name: string;
-  platform: 'linkedin';
+  platform: Platform;
   url: string;
   createdAt: string;
 }
@@ -103,7 +103,11 @@ export async function listCreators(): Promise<CreatorSource[]> {
   return [...store.creators].sort((a, b) => (a.createdAt < b.createdAt ? 1 : -1));
 }
 
-export async function addCreator(name: string, url: string): Promise<CreatorSource> {
+export async function addCreator(
+  name: string,
+  url: string,
+  platform: Platform = 'linkedin'
+): Promise<CreatorSource> {
   const store = await readStore();
   const normalizedUrl = url.trim();
   const existing = store.creators.find(
@@ -117,7 +121,7 @@ export async function addCreator(name: string, url: string): Promise<CreatorSour
   const creator: CreatorSource = {
     id: randomUUID(),
     name: name.trim(),
-    platform: 'linkedin',
+    platform,
     url: normalizedUrl,
     createdAt: new Date().toISOString(),
   };
