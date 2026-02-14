@@ -8,13 +8,14 @@ export default function HomePage() {
   const [posts, setPosts] = useState([]);
   const [viralTopics, setViralTopics] = useState([]);
   const [leadMagnets, setLeadMagnets] = useState([]);
+  const [autoPosts, setAutoPosts] = useState([]);
   const [discoveryMeta, setDiscoveryMeta] = useState({ fetchedAt: "" });
   const [status, setStatus] = useState({ error: "", success: "" });
   const [loading, setLoading] = useState({
     creators: false,
     items: false,
     generate: false,
-    discovery: false,
+    autoContent: false,
   });
 
   const [creatorForm, setCreatorForm] = useState({
@@ -53,48 +54,52 @@ export default function HomePage() {
     setItems(data.items || []);
   }
 
-  async function fetchDiscovery() {
-    const res = await fetch("/api/discovery", { cache: "no-store" });
+  async function fetchAutoContent() {
+    const res = await fetch("/api/auto-content", { cache: "no-store" });
     const data = await res.json();
-    if (!res.ok) throw new Error(data.error || "Failed to load discovery data");
+    if (!res.ok) throw new Error(data.error || "Failed to load auto content");
     setViralTopics(data.viralTopics || []);
     setLeadMagnets(data.leadMagnets || []);
+    setAutoPosts(data.autoPosts || []);
     setDiscoveryMeta({ fetchedAt: data.fetchedAt || "" });
   }
 
-  async function refreshDiscovery() {
+  async function getNewPosts() {
     setStatus({ error: "", success: "" });
-    setLoading((prev) => ({ ...prev, discovery: true }));
+    setLoading((prev) => ({ ...prev, autoContent: true }));
 
     try {
-      const res = await fetch("/api/discovery", {
+      const res = await fetch("/api/auto-content", {
         method: "POST",
         cache: "no-store",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ count: 3 }),
       });
       const data = await res.json();
-      if (!res.ok) throw new Error(data.error || "Failed to refresh discovery data");
+      if (!res.ok) throw new Error(data.error || "Failed to generate new posts");
       setViralTopics(data.viralTopics || []);
       setLeadMagnets(data.leadMagnets || []);
+      setAutoPosts(data.autoPosts || []);
       setDiscoveryMeta({ fetchedAt: data.fetchedAt || "" });
       setStatus({
         error: "",
-        success: `Updated trend feed with ${data.viralTopics?.length || 0} viral topics and ${data.leadMagnets?.length || 0} lead magnets.`,
+        success: `Generated ${data.newPosts?.length || 0} new posts plus updated lead magnets from current viral trends.`,
       });
     } catch (error) {
-      setStatus({ error: error.message || "Failed to refresh discovery data", success: "" });
+      setStatus({ error: error.message || "Failed to generate new posts", success: "" });
     } finally {
-      setLoading((prev) => ({ ...prev, discovery: false }));
+      setLoading((prev) => ({ ...prev, autoContent: false }));
     }
   }
 
   async function refreshAll(platform = genForm.platform) {
-    setLoading((prev) => ({ ...prev, creators: true, items: true, discovery: true }));
+    setLoading((prev) => ({ ...prev, creators: true, items: true, autoContent: true }));
     try {
-      await Promise.all([fetchCreators(), fetchItems(platform), fetchDiscovery()]);
+      await Promise.all([fetchCreators(), fetchItems(platform), fetchAutoContent()]);
     } catch (error) {
       setStatus({ error: error.message || "Failed loading data", success: "" });
     } finally {
-      setLoading((prev) => ({ ...prev, creators: false, items: false, discovery: false }));
+      setLoading((prev) => ({ ...prev, creators: false, items: false, autoContent: false }));
     }
   }
 
@@ -204,6 +209,10 @@ export default function HomePage() {
               <span>Viral Signals</span>
               <strong>{viralTopics.length}</strong>
             </div>
+            <div className="stat">
+              <span>Auto Posts</span>
+              <strong>{autoPosts.length}</strong>
+            </div>
           </div>
         </header>
 
@@ -216,20 +225,20 @@ export default function HomePage() {
         <section className="grid">
           <article className="card span-12">
             <div className="sectionHead">
-              <h2>Viral Discovery + Lead Magnets</h2>
+              <h2>Auto Content Studio</h2>
               <p>
-                Auto-finds high-engagement AI, AI Automation, and OpenClaw-related trends and
-                creates assignable lead magnet drafts for the team.
+                Scrapes high-signal AI and OpenClaw trends, turns them into lead magnets, then
+                creates new viral-ready Twitter and LinkedIn posts using your reference library.
               </p>
             </div>
             <div className="row actionsRow">
               <button
                 type="button"
                 className="secondaryButton"
-                onClick={refreshDiscovery}
-                disabled={loading.discovery}
+                onClick={getNewPosts}
+                disabled={loading.autoContent}
               >
-                {loading.discovery ? "Refreshing Trends..." : "Refresh Viral Feed"}
+                {loading.autoContent ? "Creating Posts..." : "Get New Posts"}
               </button>
               <div className="lastUpdated">
                 Last refresh:{" "}
@@ -243,9 +252,9 @@ export default function HomePage() {
               <div>
                 <h3 className="subhead">Viral Content Signals</h3>
                 <div className="list">
-                  {!loading.discovery && viralTopics.length === 0 && (
+                  {!loading.autoContent && viralTopics.length === 0 && (
                     <div className="item muted">
-                      No trend data yet. Click &quot;Refresh Viral Feed&quot; to pull live market
+                      No trend data yet. Click &quot;Get New Posts&quot; to pull live market
                       signals.
                     </div>
                   )}
@@ -270,9 +279,9 @@ export default function HomePage() {
               <div>
                 <h3 className="subhead">Generated Lead Magnets</h3>
                 <div className="list">
-                  {!loading.discovery && leadMagnets.length === 0 && (
+                  {!loading.autoContent && leadMagnets.length === 0 && (
                     <div className="item muted">
-                      No lead magnets yet. Refresh the feed to auto-generate them.
+                      No lead magnets yet. Click &quot;Get New Posts&quot; to auto-generate them.
                     </div>
                   )}
                   {leadMagnets.map((magnet) => (
@@ -283,6 +292,27 @@ export default function HomePage() {
                         <span>Assigned: {magnet.assignedTo}</span>
                       </div>
                       <p className="inlineSummary">{magnet.hook}</p>
+                    </div>
+                  ))}
+                </div>
+              </div>
+              <div>
+                <h3 className="subhead">Auto-Generated Posts</h3>
+                <div className="list">
+                  {!loading.autoContent && autoPosts.length === 0 && (
+                    <div className="item muted">
+                      No auto posts yet. Click &quot;Get New Posts&quot; to generate for both
+                      Twitter and LinkedIn.
+                    </div>
+                  )}
+                  {autoPosts.map((post) => (
+                    <div className="item outputCard" key={post.id}>
+                      <strong>{post.hook || "New draft"}</strong>
+                      <div className="meta">
+                        <span className="tag">{post.platform}</span>
+                        <span>{new Date(post.createdAt).toLocaleString()}</span>
+                      </div>
+                      <pre>{post.post}</pre>
                     </div>
                   ))}
                 </div>
