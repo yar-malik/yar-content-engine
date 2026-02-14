@@ -8,7 +8,7 @@ import {
   saveViralTopics,
 } from './content-studio';
 
-interface DiscoveryResult {
+export interface DiscoveryResult {
   viralTopics: ViralTopic[];
   leadMagnets: LeadMagnetDraft[];
   fetchedAt: string;
@@ -55,6 +55,13 @@ const LEAD_MAGNET_TYPES = [
   'Template Bundle',
   'Teardown',
   'Mini Course',
+];
+
+const FALLBACK_TOPICS = [
+  'How teams are shipping AI automation agents in production',
+  'OpenClaw workflows that save 10+ hours per week',
+  'AI operations playbooks for service businesses',
+  'Practical Claude Code automations that drive pipeline',
 ];
 
 function parseTeamMembers(): string[] {
@@ -197,6 +204,23 @@ export async function refreshDiscoveryData(): Promise<DiscoveryResult> {
     .sort((a, b) => (a.score === b.score ? b.engagement - a.engagement : b.score - a.score))
     .slice(0, 18)
     .map((topic) => ({ ...topic, createdAt: fetchedAt }));
+
+  if (!uniqueTopics.length) {
+    FALLBACK_TOPICS.forEach((title, index) => {
+      uniqueTopics.push({
+        id: randomUUID(),
+        title,
+        url: 'https://news.ycombinator.com/',
+        source: 'Fallback Trend Feed',
+        publishedAt: fetchedAt,
+        score: 8 - index * 0.5,
+        engagement: 60 - index * 5,
+        relevanceReasons: ['AI automation relevance', 'OpenClaw/agentic workflow fit'],
+        summary: 'Fallback trend used because live feed returned no results.',
+        createdAt: fetchedAt,
+      });
+    });
+  }
 
   const leadMagnets = buildLeadMagnets(uniqueTopics, fetchedAt);
 

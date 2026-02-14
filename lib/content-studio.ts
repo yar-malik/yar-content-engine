@@ -46,11 +46,22 @@ export interface LeadMagnetDraft {
   createdAt: string;
 }
 
+export interface AutoPost {
+  id: string;
+  platform: Platform;
+  hook: string;
+  post: string;
+  basedOnTopicId?: string;
+  basedOnLeadMagnetId?: string;
+  createdAt: string;
+}
+
 interface ContentStore {
   items: LibraryItem[];
   creators: CreatorSource[];
   viralTopics?: ViralTopic[];
   leadMagnets?: LeadMagnetDraft[];
+  autoPosts?: AutoPost[];
 }
 
 const STORE_PATH = path.join(process.cwd(), 'data', 'content-studio.json');
@@ -76,7 +87,8 @@ async function readStore(): Promise<ContentStore> {
   const creators = Array.isArray(parsed?.creators) ? parsed.creators : [];
   const viralTopics = Array.isArray(parsed?.viralTopics) ? parsed.viralTopics : [];
   const leadMagnets = Array.isArray(parsed?.leadMagnets) ? parsed.leadMagnets : [];
-  return { items, creators, viralTopics, leadMagnets };
+  const autoPosts = Array.isArray(parsed?.autoPosts) ? parsed.autoPosts : [];
+  return { items, creators, viralTopics, leadMagnets, autoPosts };
 }
 
 async function writeStore(store: ContentStore) {
@@ -120,6 +132,22 @@ export async function saveLeadMagnets(
   store.leadMagnets = leadMagnets;
   await writeStore(store);
   return leadMagnets;
+}
+
+export async function listAutoPosts(platform?: Platform): Promise<AutoPost[]> {
+  const store = await readStore();
+  const posts = Array.isArray(store.autoPosts) ? store.autoPosts : [];
+  const filtered = platform ? posts.filter((post) => post.platform === platform) : posts;
+  return [...filtered].sort((a, b) => (a.createdAt < b.createdAt ? 1 : -1));
+}
+
+export async function addAutoPosts(posts: AutoPost[]): Promise<AutoPost[]> {
+  if (!posts.length) return [];
+  const store = await readStore();
+  const existing = Array.isArray(store.autoPosts) ? store.autoPosts : [];
+  store.autoPosts = [...posts, ...existing].slice(0, 400);
+  await writeStore(store);
+  return posts;
 }
 
 export async function addItem(
