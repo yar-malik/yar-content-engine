@@ -131,49 +131,85 @@ export default function HomePage() {
     }
   }
 
+  const platformLabel = genForm.platform === "linkedin" ? "LinkedIn" : "Twitter / X";
+
   return (
     <div className="page">
       <div className="shell">
         <header className="hero">
-          <h1>Content Engine</h1>
-          <p>
-            Add creator sources, build your reference library, and generate post drafts with
-            GPT-4o mini.
-          </p>
+          <div>
+            <p className="eyebrow">Social Workflow</p>
+            <h1>Content Engine</h1>
+            <p>
+              Capture strong creator examples, curate reusable references, and generate clear
+              platform-native drafts.
+            </p>
+          </div>
+          <div className="heroStats">
+            <div className="stat">
+              <span>Creators</span>
+              <strong>{creators.length}</strong>
+            </div>
+            <div className="stat">
+              <span>References</span>
+              <strong>{filteredItems.length}</strong>
+            </div>
+            <div className="stat">
+              <span>Platform</span>
+              <strong>{platformLabel}</strong>
+            </div>
+          </div>
         </header>
+
+        {(status.error || status.success) && (
+          <div className={`statusBanner ${status.error ? "error" : "success"}`}>
+            {status.error || status.success}
+          </div>
+        )}
 
         <section className="grid">
           <article className="card span-4">
-            <h2>Creator Sources</h2>
-            <p>Save your favorite X and LinkedIn creators as reusable inspiration sources.</p>
+            <div className="sectionHead">
+              <h2>Creator Sources</h2>
+              <p>Track trusted voices to keep your ideas grounded in real-world examples.</p>
+            </div>
 
             <form className="form" onSubmit={addCreator}>
-              <input
-                placeholder="Creator name"
-                value={creatorForm.name}
-                onChange={(e) => setCreatorForm((prev) => ({ ...prev, name: e.target.value }))}
-              />
-              <input
-                placeholder="https://x.com/username"
-                value={creatorForm.url}
-                onChange={(e) => setCreatorForm((prev) => ({ ...prev, url: e.target.value }))}
-              />
-              <select
-                value={creatorForm.platform}
-                onChange={(e) =>
-                  setCreatorForm((prev) => ({ ...prev, platform: e.target.value }))
-                }
-              >
-                <option value="twitter">Twitter / X</option>
-                <option value="linkedin">LinkedIn</option>
-              </select>
+              <label className="field">
+                <span className="fieldLabel">Creator Name</span>
+                <input
+                  placeholder="Justin Welsh"
+                  value={creatorForm.name}
+                  onChange={(e) => setCreatorForm((prev) => ({ ...prev, name: e.target.value }))}
+                />
+              </label>
+              <label className="field">
+                <span className="fieldLabel">Profile URL</span>
+                <input
+                  placeholder="https://x.com/username"
+                  value={creatorForm.url}
+                  onChange={(e) => setCreatorForm((prev) => ({ ...prev, url: e.target.value }))}
+                />
+              </label>
+              <label className="field">
+                <span className="fieldLabel">Platform</span>
+                <select
+                  value={creatorForm.platform}
+                  onChange={(e) =>
+                    setCreatorForm((prev) => ({ ...prev, platform: e.target.value }))
+                  }
+                >
+                  <option value="twitter">Twitter / X</option>
+                  <option value="linkedin">LinkedIn</option>
+                </select>
+              </label>
               <button type="submit">Add Creator</button>
             </form>
 
             <div className="list">
-              {loading.creators && <div className="item">Loading creators...</div>}
+              {loading.creators && <div className="item muted">Loading creators...</div>}
               {!loading.creators && creators.length === 0 && (
-                <div className="item">No creators yet.</div>
+                <div className="item muted">No creators yet.</div>
               )}
               {creators.map((creator) => (
                 <div className="item" key={creator.id}>
@@ -190,40 +226,58 @@ export default function HomePage() {
           </article>
 
           <article className="card span-8">
-            <h2>Reference Library</h2>
-            <p>Add seed posts to teach tone and format to the generator.</p>
+            <div className="sectionHead">
+              <h2>Reference Library</h2>
+              <p>Save high-performing posts so the generator can mirror tone and structure.</p>
+            </div>
 
             <form className="form" onSubmit={addLibraryItem}>
               <div className="row">
-                <select
-                  value={itemForm.platform}
-                  onChange={(e) => setItemForm((prev) => ({ ...prev, platform: e.target.value }))}
-                >
-                  <option value="twitter">Twitter / X</option>
-                  <option value="linkedin">LinkedIn</option>
-                </select>
-                <input
-                  placeholder="Source (optional)"
-                  value={itemForm.source}
-                  onChange={(e) => setItemForm((prev) => ({ ...prev, source: e.target.value }))}
-                />
+                <label className="field">
+                  <span className="fieldLabel">Platform</span>
+                  <select
+                    value={itemForm.platform}
+                    onChange={(e) =>
+                      setItemForm((prev) => ({ ...prev, platform: e.target.value }))
+                    }
+                  >
+                    <option value="twitter">Twitter / X</option>
+                    <option value="linkedin">LinkedIn</option>
+                  </select>
+                </label>
+                <label className="field">
+                  <span className="fieldLabel">Source (optional)</span>
+                  <input
+                    placeholder="Post URL or author"
+                    value={itemForm.source}
+                    onChange={(e) =>
+                      setItemForm((prev) => ({ ...prev, source: e.target.value }))
+                    }
+                  />
+                </label>
               </div>
-              <textarea
-                placeholder="Paste a high-performing post..."
-                value={itemForm.text}
-                onChange={(e) => setItemForm((prev) => ({ ...prev, text: e.target.value }))}
-              />
+              <label className="field">
+                <span className="fieldLabel">Reference Post</span>
+                <textarea
+                  placeholder="Paste a high-performing post..."
+                  value={itemForm.text}
+                  onChange={(e) => setItemForm((prev) => ({ ...prev, text: e.target.value }))}
+                />
+              </label>
               <button type="submit">Add Reference Post</button>
             </form>
 
             <div className="list">
-              {loading.items && <div className="item">Loading posts...</div>}
+              {loading.items && <div className="item muted">Loading posts...</div>}
               {!loading.items && filteredItems.length === 0 && (
-                <div className="item">No posts for {genForm.platform} yet.</div>
+                <div className="item muted">No posts for {genForm.platform} yet.</div>
               )}
               {filteredItems.map((item) => (
                 <div className="item" key={item.id}>
-                  <strong>{item.text.slice(0, 120)}{item.text.length > 120 ? "..." : ""}</strong>
+                  <strong>
+                    {item.text.slice(0, 140)}
+                    {item.text.length > 140 ? "..." : ""}
+                  </strong>
                   <div className="meta">
                     <span className="tag">{item.platform}</span>
                     <span>{item.source || "manual"}</span>
@@ -234,74 +288,89 @@ export default function HomePage() {
           </article>
 
           <article className="card span-12">
-            <h2>Generate Posts</h2>
-            <p>Write a brief and generate platform-ready drafts.</p>
+            <div className="sectionHead">
+              <h2>Generate Posts</h2>
+              <p>Write a focused prompt and produce clean drafts in one step.</p>
+            </div>
 
             <form className="form" onSubmit={generate}>
-              <div className="row">
-                <select
-                  value={genForm.platform}
-                  onChange={(e) => {
-                    const platform = e.target.value;
-                    setGenForm((prev) => ({ ...prev, platform }));
-                    fetchItems(platform).catch(() => {});
-                  }}
-                >
-                  <option value="twitter">Twitter / X</option>
-                  <option value="linkedin">LinkedIn</option>
-                </select>
-                <input
-                  type="number"
-                  min={1}
-                  max={10}
-                  value={genForm.variants}
-                  onChange={(e) =>
-                    setGenForm((prev) => ({
-                      ...prev,
-                      variants: Math.max(1, Math.min(Number(e.target.value || 1), 10)),
-                    }))
-                  }
-                />
+              <div className="row row-tight">
+                <label className="field">
+                  <span className="fieldLabel">Platform</span>
+                  <select
+                    value={genForm.platform}
+                    onChange={(e) => {
+                      const platform = e.target.value;
+                      setGenForm((prev) => ({ ...prev, platform }));
+                      fetchItems(platform).catch(() => {});
+                    }}
+                  >
+                    <option value="twitter">Twitter / X</option>
+                    <option value="linkedin">LinkedIn</option>
+                  </select>
+                </label>
+                <label className="field">
+                  <span className="fieldLabel">Variants</span>
+                  <input
+                    type="number"
+                    min={1}
+                    max={10}
+                    value={genForm.variants}
+                    onChange={(e) =>
+                      setGenForm((prev) => ({
+                        ...prev,
+                        variants: Math.max(1, Math.min(Number(e.target.value || 1), 10)),
+                      }))
+                    }
+                  />
+                </label>
               </div>
 
-              <textarea
-                placeholder="Brief (required): what should this post communicate?"
-                value={genForm.brief}
-                onChange={(e) => setGenForm((prev) => ({ ...prev, brief: e.target.value }))}
-              />
+              <label className="field">
+                <span className="fieldLabel">Brief</span>
+                <textarea
+                  placeholder="What should this post communicate?"
+                  value={genForm.brief}
+                  onChange={(e) => setGenForm((prev) => ({ ...prev, brief: e.target.value }))}
+                />
+              </label>
 
               <div className="row">
-                <input
-                  placeholder="Audience (optional)"
-                  value={genForm.audience}
-                  onChange={(e) => setGenForm((prev) => ({ ...prev, audience: e.target.value }))}
-                />
-                <input
-                  placeholder="Goal (optional)"
-                  value={genForm.goal}
-                  onChange={(e) => setGenForm((prev) => ({ ...prev, goal: e.target.value }))}
-                />
+                <label className="field">
+                  <span className="fieldLabel">Audience (optional)</span>
+                  <input
+                    placeholder="Who is this for?"
+                    value={genForm.audience}
+                    onChange={(e) => setGenForm((prev) => ({ ...prev, audience: e.target.value }))}
+                  />
+                </label>
+                <label className="field">
+                  <span className="fieldLabel">Goal (optional)</span>
+                  <input
+                    placeholder="What action should they take?"
+                    value={genForm.goal}
+                    onChange={(e) => setGenForm((prev) => ({ ...prev, goal: e.target.value }))}
+                  />
+                </label>
               </div>
 
-              <input
-                placeholder="Call to action (optional)"
-                value={genForm.callToAction}
-                onChange={(e) =>
-                  setGenForm((prev) => ({ ...prev, callToAction: e.target.value }))
-                }
-              />
+              <label className="field">
+                <span className="fieldLabel">Call to Action (optional)</span>
+                <input
+                  placeholder="Reply, DM, visit site, book a call..."
+                  value={genForm.callToAction}
+                  onChange={(e) => setGenForm((prev) => ({ ...prev, callToAction: e.target.value }))}
+                />
+              </label>
 
               <button type="submit" disabled={loading.generate}>
                 {loading.generate ? "Generating..." : "Generate Posts"}
               </button>
             </form>
 
-            {status.error && <p className="error">{status.error}</p>}
-            {status.success && <p className="success">{status.success}</p>}
-
             <div className="output">
               {posts.map((post, idx) => (
-                <div key={`${idx}-${post.hook}`} className="item">
+                <div key={`${idx}-${post.hook}`} className="item outputCard">
                   <strong>{post.hook || `Draft ${idx + 1}`}</strong>
                   <pre>{post.post}</pre>
                 </div>
