@@ -20,9 +20,37 @@ export interface CreatorSource {
   createdAt: string;
 }
 
+export interface ViralTopic {
+  id: string;
+  title: string;
+  url: string;
+  source: string;
+  publishedAt: string;
+  score: number;
+  engagement: number;
+  relevanceReasons: string[];
+  summary: string;
+  createdAt: string;
+}
+
+export interface LeadMagnetDraft {
+  id: string;
+  title: string;
+  type: string;
+  targetAudience: string;
+  assignedTo: string;
+  hook: string;
+  outline: string[];
+  callToAction: string;
+  basedOnTopicId?: string;
+  createdAt: string;
+}
+
 interface ContentStore {
   items: LibraryItem[];
   creators: CreatorSource[];
+  viralTopics?: ViralTopic[];
+  leadMagnets?: LeadMagnetDraft[];
 }
 
 const STORE_PATH = path.join(process.cwd(), 'data', 'content-studio.json');
@@ -46,7 +74,9 @@ async function readStore(): Promise<ContentStore> {
 
   const items = Array.isArray(parsed?.items) ? parsed.items : [];
   const creators = Array.isArray(parsed?.creators) ? parsed.creators : [];
-  return { items, creators };
+  const viralTopics = Array.isArray(parsed?.viralTopics) ? parsed.viralTopics : [];
+  const leadMagnets = Array.isArray(parsed?.leadMagnets) ? parsed.leadMagnets : [];
+  return { items, creators, viralTopics, leadMagnets };
 }
 
 async function writeStore(store: ContentStore) {
@@ -62,6 +92,34 @@ export async function listItems(platform?: Platform): Promise<LibraryItem[]> {
     : store.items;
 
   return filtered.sort((a, b) => (a.createdAt < b.createdAt ? 1 : -1));
+}
+
+export async function listViralTopics(): Promise<ViralTopic[]> {
+  const store = await readStore();
+  const topics = Array.isArray(store.viralTopics) ? store.viralTopics : [];
+  return [...topics].sort((a, b) => (a.score === b.score ? (a.createdAt < b.createdAt ? 1 : -1) : b.score - a.score));
+}
+
+export async function saveViralTopics(topics: ViralTopic[]): Promise<ViralTopic[]> {
+  const store = await readStore();
+  store.viralTopics = topics;
+  await writeStore(store);
+  return topics;
+}
+
+export async function listLeadMagnets(): Promise<LeadMagnetDraft[]> {
+  const store = await readStore();
+  const magnets = Array.isArray(store.leadMagnets) ? store.leadMagnets : [];
+  return [...magnets].sort((a, b) => (a.createdAt < b.createdAt ? 1 : -1));
+}
+
+export async function saveLeadMagnets(
+  leadMagnets: LeadMagnetDraft[]
+): Promise<LeadMagnetDraft[]> {
+  const store = await readStore();
+  store.leadMagnets = leadMagnets;
+  await writeStore(store);
+  return leadMagnets;
 }
 
 export async function addItem(

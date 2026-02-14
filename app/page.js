@@ -6,8 +6,16 @@ export default function HomePage() {
   const [creators, setCreators] = useState([]);
   const [items, setItems] = useState([]);
   const [posts, setPosts] = useState([]);
+  const [viralTopics, setViralTopics] = useState([]);
+  const [leadMagnets, setLeadMagnets] = useState([]);
+  const [discoveryMeta, setDiscoveryMeta] = useState({ fetchedAt: "" });
   const [status, setStatus] = useState({ error: "", success: "" });
-  const [loading, setLoading] = useState({ creators: false, items: false, generate: false });
+  const [loading, setLoading] = useState({
+    creators: false,
+    items: false,
+    generate: false,
+    discovery: false,
+  });
 
   const [creatorForm, setCreatorForm] = useState({
     name: "",
@@ -45,14 +53,48 @@ export default function HomePage() {
     setItems(data.items || []);
   }
 
-  async function refreshAll(platform = genForm.platform) {
-    setLoading((prev) => ({ ...prev, creators: true, items: true }));
+  async function fetchDiscovery() {
+    const res = await fetch("/api/discovery", { cache: "no-store" });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.error || "Failed to load discovery data");
+    setViralTopics(data.viralTopics || []);
+    setLeadMagnets(data.leadMagnets || []);
+    setDiscoveryMeta({ fetchedAt: data.fetchedAt || "" });
+  }
+
+  async function refreshDiscovery() {
+    setStatus({ error: "", success: "" });
+    setLoading((prev) => ({ ...prev, discovery: true }));
+
     try {
-      await Promise.all([fetchCreators(), fetchItems(platform)]);
+      const res = await fetch("/api/discovery", {
+        method: "POST",
+        cache: "no-store",
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || "Failed to refresh discovery data");
+      setViralTopics(data.viralTopics || []);
+      setLeadMagnets(data.leadMagnets || []);
+      setDiscoveryMeta({ fetchedAt: data.fetchedAt || "" });
+      setStatus({
+        error: "",
+        success: `Updated trend feed with ${data.viralTopics?.length || 0} viral topics and ${data.leadMagnets?.length || 0} lead magnets.`,
+      });
+    } catch (error) {
+      setStatus({ error: error.message || "Failed to refresh discovery data", success: "" });
+    } finally {
+      setLoading((prev) => ({ ...prev, discovery: false }));
+    }
+  }
+
+  async function refreshAll(platform = genForm.platform) {
+    setLoading((prev) => ({ ...prev, creators: true, items: true, discovery: true }));
+    try {
+      await Promise.all([fetchCreators(), fetchItems(platform), fetchDiscovery()]);
     } catch (error) {
       setStatus({ error: error.message || "Failed loading data", success: "" });
     } finally {
-      setLoading((prev) => ({ ...prev, creators: false, items: false }));
+      setLoading((prev) => ({ ...prev, creators: false, items: false, discovery: false }));
     }
   }
 
@@ -158,6 +200,10 @@ export default function HomePage() {
               <span>Platform</span>
               <strong>{platformLabel}</strong>
             </div>
+            <div className="stat">
+              <span>Viral Signals</span>
+              <strong>{viralTopics.length}</strong>
+            </div>
           </div>
         </header>
 
@@ -168,6 +214,82 @@ export default function HomePage() {
         )}
 
         <section className="grid">
+          <article className="card span-12">
+            <div className="sectionHead">
+              <h2>Viral Discovery + Lead Magnets</h2>
+              <p>
+                Auto-finds high-engagement AI, AI Automation, and OpenClaw-related trends and
+                creates assignable lead magnet drafts for the team.
+              </p>
+            </div>
+            <div className="row actionsRow">
+              <button
+                type="button"
+                className="secondaryButton"
+                onClick={refreshDiscovery}
+                disabled={loading.discovery}
+              >
+                {loading.discovery ? "Refreshing Trends..." : "Refresh Viral Feed"}
+              </button>
+              <div className="lastUpdated">
+                Last refresh:{" "}
+                {discoveryMeta.fetchedAt
+                  ? new Date(discoveryMeta.fetchedAt).toLocaleString()
+                  : "Not refreshed yet"}
+              </div>
+            </div>
+
+            <div className="row splitRows">
+              <div>
+                <h3 className="subhead">Viral Content Signals</h3>
+                <div className="list">
+                  {!loading.discovery && viralTopics.length === 0 && (
+                    <div className="item muted">
+                      No trend data yet. Click &quot;Refresh Viral Feed&quot; to pull live market
+                      signals.
+                    </div>
+                  )}
+                  {viralTopics.map((topic) => (
+                    <div className="item" key={topic.id}>
+                      <strong>{topic.title}</strong>
+                      <div className="meta">
+                        <span className="tag">{topic.source}</span>
+                        <span>Score: {Number(topic.score || 0).toFixed(1)}</span>
+                        <span>Engagement: {Math.round(topic.engagement || 0)}</span>
+                      </div>
+                      <p className="inlineSummary">{topic.summary}</p>
+                      {topic.url && (
+                        <a href={topic.url} target="_blank" rel="noreferrer">
+                          Open source
+                        </a>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              </div>
+              <div>
+                <h3 className="subhead">Generated Lead Magnets</h3>
+                <div className="list">
+                  {!loading.discovery && leadMagnets.length === 0 && (
+                    <div className="item muted">
+                      No lead magnets yet. Refresh the feed to auto-generate them.
+                    </div>
+                  )}
+                  {leadMagnets.map((magnet) => (
+                    <div className="item" key={magnet.id}>
+                      <strong>{magnet.title}</strong>
+                      <div className="meta">
+                        <span className="tag">{magnet.type}</span>
+                        <span>Assigned: {magnet.assignedTo}</span>
+                      </div>
+                      <p className="inlineSummary">{magnet.hook}</p>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </div>
+          </article>
+
           <article className="card span-4">
             <div className="sectionHead">
               <h2>Creator Sources</h2>
