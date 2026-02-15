@@ -1,6 +1,13 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
+import { Badge } from "../components/ui/badge";
+import { Button } from "../components/ui/button";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "../components/ui/card";
+import { Input } from "../components/ui/input";
+import { Select } from "../components/ui/select";
+import { Separator } from "../components/ui/separator";
+import { Textarea } from "../components/ui/textarea";
 
 export default function HomePage() {
   const [creators, setCreators] = useState([]);
@@ -18,18 +25,8 @@ export default function HomePage() {
     autoContent: false,
   });
 
-  const [creatorForm, setCreatorForm] = useState({
-    name: "",
-    url: "",
-    platform: "twitter",
-  });
-
-  const [itemForm, setItemForm] = useState({
-    platform: "twitter",
-    source: "",
-    text: "",
-  });
-
+  const [creatorForm, setCreatorForm] = useState({ name: "", url: "", platform: "twitter" });
+  const [itemForm, setItemForm] = useState({ platform: "twitter", source: "", text: "" });
   const [genForm, setGenForm] = useState({
     platform: "twitter",
     brief: "",
@@ -67,7 +64,6 @@ export default function HomePage() {
   async function getNewPosts() {
     setStatus({ error: "", success: "" });
     setLoading((prev) => ({ ...prev, autoContent: true }));
-
     try {
       const res = await fetch("/api/auto-content", {
         method: "POST",
@@ -83,7 +79,7 @@ export default function HomePage() {
       setDiscoveryMeta({ fetchedAt: data.fetchedAt || "" });
       setStatus({
         error: "",
-        success: `Generated ${data.newPosts?.length || 0} new posts plus updated lead magnets from current viral trends.`,
+        success: `Generated ${data.newPosts?.length || 0} new posts and refreshed lead magnets.`,
       });
     } catch (error) {
       setStatus({ error: error.message || "Failed to generate new posts", success: "" });
@@ -111,21 +107,22 @@ export default function HomePage() {
   const recentKnowledgeBase = useMemo(() => items.slice(0, 4), [items]);
   const recentMagnets = useMemo(() => leadMagnets.slice(0, 4), [leadMagnets]);
 
-  const platformPostCounts = useMemo(() => {
-    return autoPosts.reduce(
-      (acc, post) => {
-        if (post.platform === "twitter") acc.twitter += 1;
-        if (post.platform === "linkedin") acc.linkedin += 1;
-        return acc;
-      },
-      { twitter: 0, linkedin: 0 }
-    );
-  }, [autoPosts]);
+  const platformPostCounts = useMemo(
+    () =>
+      autoPosts.reduce(
+        (acc, post) => {
+          if (post.platform === "twitter") acc.twitter += 1;
+          if (post.platform === "linkedin") acc.linkedin += 1;
+          return acc;
+        },
+        { twitter: 0, linkedin: 0 }
+      ),
+    [autoPosts]
+  );
 
   async function addCreator(event) {
     event.preventDefault();
     setStatus({ error: "", success: "" });
-
     try {
       const res = await fetch("/api/creators", {
         method: "POST",
@@ -134,19 +131,17 @@ export default function HomePage() {
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || "Failed to add creator");
-
       setCreatorForm({ name: "", url: "", platform: creatorForm.platform });
       await fetchCreators();
-      setStatus({ error: "", success: "Creator added." });
+      setStatus({ error: "", success: "Competitor added." });
     } catch (error) {
-      setStatus({ error: error.message || "Failed to add creator", success: "" });
+      setStatus({ error: error.message || "Failed to add competitor", success: "" });
     }
   }
 
   async function addLibraryItem(event) {
     event.preventDefault();
     setStatus({ error: "", success: "" });
-
     try {
       const res = await fetch("/api/items", {
         method: "POST",
@@ -155,12 +150,11 @@ export default function HomePage() {
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || "Failed to add item");
-
       setItemForm((prev) => ({ ...prev, source: "", text: "" }));
       await fetchItems(genForm.platform);
-      setStatus({ error: "", success: "Reference post added." });
+      setStatus({ error: "", success: "Knowledge base item added." });
     } catch (error) {
-      setStatus({ error: error.message || "Failed to add post", success: "" });
+      setStatus({ error: error.message || "Failed to add item", success: "" });
     }
   }
 
@@ -168,7 +162,6 @@ export default function HomePage() {
     event.preventDefault();
     setStatus({ error: "", success: "" });
     setLoading((prev) => ({ ...prev, generate: true }));
-
     try {
       const res = await fetch("/api/generate", {
         method: "POST",
@@ -177,9 +170,8 @@ export default function HomePage() {
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || "Failed to generate posts");
-
       setPosts(data.posts || []);
-      setStatus({ error: "", success: `Generated ${data.posts?.length || 0} post(s).` });
+      setStatus({ error: "", success: `Generated ${data.posts?.length || 0} manual drafts.` });
     } catch (error) {
       setStatus({ error: error.message || "Failed to generate posts", success: "" });
     } finally {
@@ -193,19 +185,18 @@ export default function HomePage() {
         <aside className="leftPanel">
           <div className="panelHead">
             <p className="panelEyebrow">Content Engine</p>
-            <h1>SaaS Workspace</h1>
-            <p>Everything you need to run repeatable social content ops.</p>
+            <h1>Growth OS</h1>
+            <p>Shadcn-style B2B workspace for social pipeline execution.</p>
           </div>
 
           <section className="panelSection">
             <h2>Knowledge Base</h2>
-            <p>{items.length} total reference posts</p>
+            <p>{items.length} total references</p>
             <div className="panelList">
               {recentKnowledgeBase.length === 0 && <div className="panelListItem">No references yet</div>}
               {recentKnowledgeBase.map((item) => (
                 <div className="panelListItem" key={item.id}>
-                  {item.text.slice(0, 84)}
-                  {item.text.length > 84 ? "..." : ""}
+                  {item.text.slice(0, 82)}{item.text.length > 82 ? "..." : ""}
                 </div>
               ))}
             </div>
@@ -227,16 +218,10 @@ export default function HomePage() {
 
           <section className="panelSection">
             <h2>LinkedIn Twitter</h2>
-            <p>Auto-generated post output</p>
+            <p>Post volume by platform</p>
             <div className="panelStats">
-              <div>
-                <span>Twitter / X</span>
-                <strong>{platformPostCounts.twitter}</strong>
-              </div>
-              <div>
-                <span>LinkedIn</span>
-                <strong>{platformPostCounts.linkedin}</strong>
-              </div>
+              <div><span>Twitter / X</span><strong>{platformPostCounts.twitter}</strong></div>
+              <div><span>LinkedIn</span><strong>{platformPostCounts.linkedin}</strong></div>
             </div>
           </section>
 
@@ -259,21 +244,15 @@ export default function HomePage() {
           <header className="workspaceHead">
             <div>
               <p className="panelEyebrow">Automation Studio</p>
-              <h2>Viral Content + Lead Magnet System</h2>
-              <p>
-                Scrape trend signals, build lead magnets, and produce high-quality platform posts
-                from your own reference style library.
-              </p>
+              <h2>B2B Content Operations</h2>
+              <p>Discover trends, build lead magnets, and publish platform-native content from your reference library.</p>
             </div>
             <div className="workspaceActions">
-              <button type="button" className="primaryAction" onClick={getNewPosts} disabled={loading.autoContent}>
+              <Button type="button" onClick={getNewPosts} disabled={loading.autoContent}>
                 {loading.autoContent ? "Creating Posts..." : "Get New Posts"}
-              </button>
+              </Button>
               <span>
-                Last refresh:{" "}
-                {discoveryMeta.fetchedAt
-                  ? new Date(discoveryMeta.fetchedAt).toLocaleString()
-                  : "Not refreshed yet"}
+                Last refresh: {discoveryMeta.fetchedAt ? new Date(discoveryMeta.fetchedAt).toLocaleString() : "Not refreshed yet"}
               </span>
             </div>
           </header>
@@ -285,243 +264,135 @@ export default function HomePage() {
           )}
 
           <section className="workspaceGrid">
-            <article className="card">
-              <div className="sectionHead">
-                <h3>Viral Signals</h3>
-                <p>Current trend inputs from online discovery.</p>
-              </div>
-              <div className="list">
-                {!loading.autoContent && viralTopics.length === 0 && (
-                  <div className="item muted">No trend signals yet. Use Get New Posts.</div>
-                )}
-                {viralTopics.map((topic) => (
-                  <div className="item" key={topic.id}>
-                    <strong>{topic.title}</strong>
-                    <div className="meta">
-                      <span className="tag">{topic.source}</span>
-                      <span>Score: {Number(topic.score || 0).toFixed(1)}</span>
+            <Card>
+              <CardHeader>
+                <CardTitle>Viral Signals</CardTitle>
+                <CardDescription>Current discovery inputs from your AI niche.</CardDescription>
+              </CardHeader>
+              <CardContent>
+                <div className="list">
+                  {!loading.autoContent && viralTopics.length === 0 && <div className="item muted">No trend signals yet.</div>}
+                  {viralTopics.map((topic) => (
+                    <div className="item" key={topic.id}>
+                      <strong>{topic.title}</strong>
+                      <div className="meta">
+                        <Badge>{topic.source}</Badge>
+                        <span>Score: {Number(topic.score || 0).toFixed(1)}</span>
+                      </div>
                     </div>
-                  </div>
-                ))}
-              </div>
-            </article>
+                  ))}
+                </div>
+              </CardContent>
+            </Card>
 
-            <article className="card">
-              <div className="sectionHead">
-                <h3>Generated Lead Magnets</h3>
-                <p>Team-assigned assets generated from trend signals.</p>
-              </div>
-              <div className="list">
-                {!loading.autoContent && leadMagnets.length === 0 && (
-                  <div className="item muted">No lead magnets yet. Use Get New Posts.</div>
-                )}
-                {leadMagnets.map((magnet) => (
-                  <div className="item" key={magnet.id}>
-                    <strong>{magnet.title}</strong>
-                    <div className="meta">
-                      <span className="tag">{magnet.type}</span>
-                      <span>{magnet.assignedTo}</span>
+            <Card>
+              <CardHeader>
+                <CardTitle>Lead Magnets</CardTitle>
+                <CardDescription>Generated and assigned assets for your team.</CardDescription>
+              </CardHeader>
+              <CardContent>
+                <div className="list">
+                  {!loading.autoContent && leadMagnets.length === 0 && <div className="item muted">No lead magnets yet.</div>}
+                  {leadMagnets.map((magnet) => (
+                    <div className="item" key={magnet.id}>
+                      <strong>{magnet.title}</strong>
+                      <div className="meta">
+                        <Badge variant="secondary">{magnet.type}</Badge>
+                        <span>{magnet.assignedTo}</span>
+                      </div>
+                      <p className="inlineSummary">{magnet.hook}</p>
                     </div>
-                    <p className="inlineSummary">{magnet.hook}</p>
-                  </div>
-                ))}
-              </div>
-            </article>
+                  ))}
+                </div>
+              </CardContent>
+            </Card>
 
-            <article className="card fullWidth">
-              <div className="sectionHead">
-                <h3>Auto-Generated Posts</h3>
-                <p>Fresh Twitter and LinkedIn drafts generated on every click.</p>
-              </div>
-              <div className="list">
-                {!loading.autoContent && autoPosts.length === 0 && (
-                  <div className="item muted">No posts yet. Click Get New Posts.</div>
-                )}
-                {autoPosts.map((post) => (
-                  <div className="item outputCard" key={post.id}>
-                    <strong>{post.hook || "New Draft"}</strong>
-                    <div className="meta">
-                      <span className="tag">{post.platform}</span>
-                      <span>{new Date(post.createdAt).toLocaleString()}</span>
+            <Card className="fullWidth">
+              <CardHeader>
+                <CardTitle>Auto-Generated Posts</CardTitle>
+                <CardDescription>Fresh Twitter and LinkedIn drafts on every run.</CardDescription>
+              </CardHeader>
+              <CardContent>
+                <div className="list">
+                  {!loading.autoContent && autoPosts.length === 0 && <div className="item muted">No posts yet. Click Get New Posts.</div>}
+                  {autoPosts.map((post) => (
+                    <div className="item outputCard" key={post.id}>
+                      <strong>{post.hook || "New Draft"}</strong>
+                      <div className="meta">
+                        <Badge>{post.platform}</Badge>
+                        <span>{new Date(post.createdAt).toLocaleString()}</span>
+                      </div>
+                      <pre>{post.post}</pre>
                     </div>
-                    <pre>{post.post}</pre>
+                  ))}
+                </div>
+              </CardContent>
+            </Card>
+
+            <Card>
+              <CardHeader>
+                <CardTitle>Competitor Manager</CardTitle>
+                <CardDescription>Add and track market voices.</CardDescription>
+              </CardHeader>
+              <CardContent>
+                <form className="form" onSubmit={addCreator}>
+                  <label className="field"><span className="fieldLabel">Name</span><Input placeholder="Creator name" value={creatorForm.name} onChange={(e) => setCreatorForm((prev) => ({ ...prev, name: e.target.value }))} /></label>
+                  <label className="field"><span className="fieldLabel">Profile URL</span><Input placeholder="https://x.com/username" value={creatorForm.url} onChange={(e) => setCreatorForm((prev) => ({ ...prev, url: e.target.value }))} /></label>
+                  <label className="field"><span className="fieldLabel">Platform</span><Select value={creatorForm.platform} onChange={(e) => setCreatorForm((prev) => ({ ...prev, platform: e.target.value }))}><option value="twitter">Twitter / X</option><option value="linkedin">LinkedIn</option></Select></label>
+                  <Button type="submit">Add Competitor</Button>
+                </form>
+              </CardContent>
+            </Card>
+
+            <Card>
+              <CardHeader>
+                <CardTitle>Knowledge Base Manager</CardTitle>
+                <CardDescription>Feed your generator with reference quality content.</CardDescription>
+              </CardHeader>
+              <CardContent>
+                <form className="form" onSubmit={addLibraryItem}>
+                  <div className="row">
+                    <label className="field"><span className="fieldLabel">Platform</span><Select value={itemForm.platform} onChange={(e) => setItemForm((prev) => ({ ...prev, platform: e.target.value }))}><option value="twitter">Twitter / X</option><option value="linkedin">LinkedIn</option></Select></label>
+                    <label className="field"><span className="fieldLabel">Source</span><Input placeholder="Post URL or author" value={itemForm.source} onChange={(e) => setItemForm((prev) => ({ ...prev, source: e.target.value }))} /></label>
                   </div>
-                ))}
-              </div>
-            </article>
+                  <label className="field"><span className="fieldLabel">Reference Post</span><Textarea placeholder="Paste a high-performing post..." value={itemForm.text} onChange={(e) => setItemForm((prev) => ({ ...prev, text: e.target.value }))} /></label>
+                  <Button type="submit">Add Reference</Button>
+                </form>
+              </CardContent>
+            </Card>
 
-            <article className="card">
-              <div className="sectionHead">
-                <h3>Competitors</h3>
-                <p>Track creator or competitor sources.</p>
-              </div>
-
-              <form className="form" onSubmit={addCreator}>
-                <label className="field">
-                  <span className="fieldLabel">Creator Name</span>
-                  <input
-                    placeholder="Justin Welsh"
-                    value={creatorForm.name}
-                    onChange={(e) => setCreatorForm((prev) => ({ ...prev, name: e.target.value }))}
-                  />
-                </label>
-                <label className="field">
-                  <span className="fieldLabel">Profile URL</span>
-                  <input
-                    placeholder="https://x.com/username"
-                    value={creatorForm.url}
-                    onChange={(e) => setCreatorForm((prev) => ({ ...prev, url: e.target.value }))}
-                  />
-                </label>
-                <label className="field">
-                  <span className="fieldLabel">Platform</span>
-                  <select
-                    value={creatorForm.platform}
-                    onChange={(e) =>
-                      setCreatorForm((prev) => ({ ...prev, platform: e.target.value }))
-                    }
-                  >
-                    <option value="twitter">Twitter / X</option>
-                    <option value="linkedin">LinkedIn</option>
-                  </select>
-                </label>
-                <button type="submit">Add Competitor</button>
-              </form>
-            </article>
-
-            <article className="card">
-              <div className="sectionHead">
-                <h3>Knowledge Base</h3>
-                <p>Add reference posts to steer tone and format.</p>
-              </div>
-
-              <form className="form" onSubmit={addLibraryItem}>
-                <div className="row">
-                  <label className="field">
-                    <span className="fieldLabel">Platform</span>
-                    <select
-                      value={itemForm.platform}
-                      onChange={(e) =>
-                        setItemForm((prev) => ({ ...prev, platform: e.target.value }))
-                      }
-                    >
-                      <option value="twitter">Twitter / X</option>
-                      <option value="linkedin">LinkedIn</option>
-                    </select>
-                  </label>
-                  <label className="field">
-                    <span className="fieldLabel">Source (optional)</span>
-                    <input
-                      placeholder="Post URL or author"
-                      value={itemForm.source}
-                      onChange={(e) =>
-                        setItemForm((prev) => ({ ...prev, source: e.target.value }))
-                      }
-                    />
-                  </label>
-                </div>
-                <label className="field">
-                  <span className="fieldLabel">Reference Post</span>
-                  <textarea
-                    placeholder="Paste a high-performing post..."
-                    value={itemForm.text}
-                    onChange={(e) => setItemForm((prev) => ({ ...prev, text: e.target.value }))}
-                  />
-                </label>
-                <button type="submit">Add Reference Post</button>
-              </form>
-            </article>
-
-            <article className="card fullWidth">
-              <div className="sectionHead">
-                <h3>Manual Generator</h3>
-                <p>Create controlled drafts with custom briefing.</p>
-              </div>
-
-              <form className="form" onSubmit={generate}>
-                <div className="row row-tight">
-                  <label className="field">
-                    <span className="fieldLabel">Platform</span>
-                    <select
-                      value={genForm.platform}
-                      onChange={(e) => {
-                        const platform = e.target.value;
-                        setGenForm((prev) => ({ ...prev, platform }));
-                        fetchItems(platform).catch(() => {});
-                      }}
-                    >
-                      <option value="twitter">Twitter / X</option>
-                      <option value="linkedin">LinkedIn</option>
-                    </select>
-                  </label>
-                  <label className="field">
-                    <span className="fieldLabel">Variants</span>
-                    <input
-                      type="number"
-                      min={1}
-                      max={10}
-                      value={genForm.variants}
-                      onChange={(e) =>
-                        setGenForm((prev) => ({
-                          ...prev,
-                          variants: Math.max(1, Math.min(Number(e.target.value || 1), 10)),
-                        }))
-                      }
-                    />
-                  </label>
-                </div>
-
-                <label className="field">
-                  <span className="fieldLabel">Brief</span>
-                  <textarea
-                    placeholder="What should this post communicate?"
-                    value={genForm.brief}
-                    onChange={(e) => setGenForm((prev) => ({ ...prev, brief: e.target.value }))}
-                  />
-                </label>
-
-                <div className="row">
-                  <label className="field">
-                    <span className="fieldLabel">Audience (optional)</span>
-                    <input
-                      placeholder="Who is this for?"
-                      value={genForm.audience}
-                      onChange={(e) => setGenForm((prev) => ({ ...prev, audience: e.target.value }))}
-                    />
-                  </label>
-                  <label className="field">
-                    <span className="fieldLabel">Goal (optional)</span>
-                    <input
-                      placeholder="What action should they take?"
-                      value={genForm.goal}
-                      onChange={(e) => setGenForm((prev) => ({ ...prev, goal: e.target.value }))}
-                    />
-                  </label>
-                </div>
-
-                <label className="field">
-                  <span className="fieldLabel">Call to Action (optional)</span>
-                  <input
-                    placeholder="Reply, DM, visit site, book a call..."
-                    value={genForm.callToAction}
-                    onChange={(e) => setGenForm((prev) => ({ ...prev, callToAction: e.target.value }))}
-                  />
-                </label>
-
-                <button type="submit" disabled={loading.generate}>
-                  {loading.generate ? "Generating..." : "Generate Posts"}
-                </button>
-              </form>
-
-              <div className="output">
-                {posts.map((post, idx) => (
-                  <div key={`${idx}-${post.hook}`} className="item outputCard">
-                    <strong>{post.hook || `Draft ${idx + 1}`}</strong>
-                    <pre>{post.post}</pre>
+            <Card className="fullWidth">
+              <CardHeader>
+                <CardTitle>Manual Generator</CardTitle>
+                <CardDescription>Use controlled prompting for campaign-specific drafts.</CardDescription>
+              </CardHeader>
+              <CardContent>
+                <form className="form" onSubmit={generate}>
+                  <div className="row row-tight">
+                    <label className="field"><span className="fieldLabel">Platform</span><Select value={genForm.platform} onChange={(e) => { const platform = e.target.value; setGenForm((prev) => ({ ...prev, platform })); fetchItems(platform).catch(() => {}); }}><option value="twitter">Twitter / X</option><option value="linkedin">LinkedIn</option></Select></label>
+                    <label className="field"><span className="fieldLabel">Variants</span><Input type="number" min={1} max={10} value={genForm.variants} onChange={(e) => setGenForm((prev) => ({ ...prev, variants: Math.max(1, Math.min(Number(e.target.value || 1), 10)) }))} /></label>
                   </div>
-                ))}
-              </div>
-            </article>
+                  <label className="field"><span className="fieldLabel">Brief</span><Textarea placeholder="What should this post communicate?" value={genForm.brief} onChange={(e) => setGenForm((prev) => ({ ...prev, brief: e.target.value }))} /></label>
+                  <div className="row">
+                    <label className="field"><span className="fieldLabel">Audience</span><Input placeholder="Who is this for?" value={genForm.audience} onChange={(e) => setGenForm((prev) => ({ ...prev, audience: e.target.value }))} /></label>
+                    <label className="field"><span className="fieldLabel">Goal</span><Input placeholder="What action should they take?" value={genForm.goal} onChange={(e) => setGenForm((prev) => ({ ...prev, goal: e.target.value }))} /></label>
+                  </div>
+                  <label className="field"><span className="fieldLabel">CTA</span><Input placeholder="Reply, DM, visit site..." value={genForm.callToAction} onChange={(e) => setGenForm((prev) => ({ ...prev, callToAction: e.target.value }))} /></label>
+                  <Button type="submit" disabled={loading.generate}>{loading.generate ? "Generating..." : "Generate Posts"}</Button>
+                </form>
+
+                <Separator className="generator-sep" />
+
+                <div className="output">
+                  {posts.map((post, idx) => (
+                    <div key={`${idx}-${post.hook}`} className="item outputCard">
+                      <strong>{post.hook || `Draft ${idx + 1}`}</strong>
+                      <pre>{post.post}</pre>
+                    </div>
+                  ))}
+                </div>
+              </CardContent>
+            </Card>
           </section>
         </main>
       </div>
