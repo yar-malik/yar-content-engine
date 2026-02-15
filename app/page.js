@@ -2,8 +2,10 @@
 
 import { useEffect, useMemo, useState } from "react";
 import { Button } from "../components/ui/button";
+import { Card, CardContent, CardHeader, CardTitle } from "../components/ui/card";
 import { Input } from "../components/ui/input";
 import { Select } from "../components/ui/select";
+import { Separator } from "../components/ui/separator";
 import { Textarea } from "../components/ui/textarea";
 
 export default function HomePage() {
@@ -14,12 +16,7 @@ export default function HomePage() {
   const [autoPosts, setAutoPosts] = useState([]);
   const [discoveryMeta, setDiscoveryMeta] = useState({ fetchedAt: "" });
   const [status, setStatus] = useState({ error: "", success: "" });
-  const [loading, setLoading] = useState({
-    creators: false,
-    items: false,
-    generate: false,
-    autoContent: false,
-  });
+  const [loading, setLoading] = useState({ creators: false, items: false, generate: false, autoContent: false });
 
   const [creatorForm, setCreatorForm] = useState({ name: "", url: "", platform: "twitter" });
   const [itemForm, setItemForm] = useState({ platform: "twitter", source: "", text: "" });
@@ -83,18 +80,6 @@ export default function HomePage() {
       { label: "Posts", value: linkedin + twitter, sub: `${twitter} X / ${linkedin} LI` },
     ];
   }, [items.length, creators.length, leadMagnets.length, autoPosts]);
-
-  const chartPoints = useMemo(() => {
-    const base = Array.from({ length: 36 }, (_, idx) => {
-      const wave = Math.sin((idx / 4.3) * Math.PI) * 16;
-      const boost = idx % 6 === 0 ? 22 : 0;
-      return Math.max(8, 42 + wave + boost + Math.min(autoPosts.length, 24) * 0.6);
-    });
-
-    return base
-      .map((point, idx) => `${(idx / (base.length - 1)) * 100},${100 - point}`)
-      .join(" ");
-  }, [autoPosts.length]);
 
   async function getNewPosts() {
     setStatus({ error: "", success: "" });
@@ -179,227 +164,183 @@ export default function HomePage() {
   }
 
   return (
-    <div className="dashboard">
-      <aside className="sidebar">
-        <div className="logo">Acme Inc.</div>
-        <Button className="quickCreate" onClick={getNewPosts} disabled={loading.autoContent}>
-          {loading.autoContent ? "Working..." : "Quick Create"}
-        </Button>
-
-        <div className="navGroup">
-          <div className="navItem active">Dashboard</div>
-          <div className="navItem">Knowledge Base</div>
-          <div className="navItem">Competitors</div>
-          <div className="navItem">LinkedIn Twitter</div>
-          <div className="navItem">Lead Magnets</div>
-        </div>
-
-        <div className="sidebarFoot">
-          {discoveryMeta.fetchedAt
-            ? `Updated ${new Date(discoveryMeta.fetchedAt).toLocaleString()}`
-            : "No updates yet"}
-        </div>
-      </aside>
-
-      <main className="content">
-        <header className="contentTop">
-          <div className="contentTitle">Documents</div>
-          <div className="contentRight">GitHub</div>
-        </header>
-
-        {(status.error || status.success) && (
-          <div className={`status ${status.error ? "error" : "success"}`}>
-            {status.error || status.success}
-          </div>
-        )}
-
-        <section className="metricsRow">
-          {stats.map((card) => (
-            <article className="metricCard" key={card.label}>
-              <p>{card.label}</p>
-              <h3>{card.value}</h3>
-              <span>{card.sub}</span>
-            </article>
-          ))}
-        </section>
-
-        <section className="chartCard">
-          <div className="chartHead">
-            <div>
-              <h3>Total Visitors</h3>
-              <p>Last 3 months</p>
+    <div className="min-h-screen bg-muted/40">
+      <div className="grid min-h-screen md:grid-cols-[220px_1fr]">
+        <aside className="border-r bg-background">
+          <div className="flex h-full flex-col gap-4 p-4">
+            <div className="text-sm font-semibold">Acme Inc.</div>
+            <Button className="justify-start" onClick={getNewPosts} disabled={loading.autoContent}>
+              {loading.autoContent ? "Working..." : "Quick Create"}
+            </Button>
+            <div className="space-y-1 text-sm">
+              <div className="rounded-md bg-primary px-3 py-2 text-primary-foreground">Dashboard</div>
+              <div className="rounded-md px-3 py-2 text-muted-foreground">Knowledge Base</div>
+              <div className="rounded-md px-3 py-2 text-muted-foreground">Competitors</div>
+              <div className="rounded-md px-3 py-2 text-muted-foreground">LinkedIn Twitter</div>
+              <div className="rounded-md px-3 py-2 text-muted-foreground">Lead Magnets</div>
             </div>
-            <div className="chartFilters">
-              <button>Last 3 months</button>
-              <button>Last 30 days</button>
-              <button>Last 7 days</button>
+            <div className="mt-auto text-xs text-muted-foreground">
+              {discoveryMeta.fetchedAt ? `Updated ${new Date(discoveryMeta.fetchedAt).toLocaleString()}` : "No updates"}
             </div>
           </div>
-          <svg viewBox="0 0 100 100" preserveAspectRatio="none" className="areaChart">
-            <polyline points={`0,100 ${chartPoints} 100,100`} className="fillLine" />
-            <polyline points={chartPoints} className="strokeLine" />
-          </svg>
-        </section>
+        </aside>
 
-        <section className="tableCard">
-          <div className="tableHead">
-            <div className="tabs">
-              <button className="active">Outline</button>
-              <button>Past Performance</button>
-              <button>Key Personnel</button>
+        <main className="p-4 md:p-6">
+          <div className="rounded-lg border bg-background">
+            <div className="flex items-center justify-between border-b px-4 py-3 text-sm">
+              <div className="font-medium">Documents</div>
+              <div className="text-muted-foreground">GitHub</div>
             </div>
-            <div className="tableActions">
-              <button>Customize Columns</button>
-              <button>Add Section</button>
-            </div>
-          </div>
 
-          <table>
-            <thead>
-              <tr>
-                <th>Title</th>
-                <th>Platform</th>
-                <th>Status</th>
-                <th>Source</th>
-              </tr>
-            </thead>
-            <tbody>
-              {autoPosts.slice(0, 8).map((post) => (
-                <tr key={post.id}>
-                  <td>{post.hook || "Draft"}</td>
-                  <td>{post.platform}</td>
-                  <td>Ready</td>
-                  <td>Auto</td>
-                </tr>
-              ))}
-              {autoPosts.length === 0 && (
-                <tr>
-                  <td colSpan={4} className="emptyRow">No rows yet</td>
-                </tr>
-              )}
-            </tbody>
-          </table>
-        </section>
-
-        <section className="formsGrid">
-          <article className="formCard">
-            <h4>Knowledge Base</h4>
-            <form className="form" onSubmit={addLibraryItem}>
-              <Select
-                value={itemForm.platform}
-                onChange={(e) => setItemForm((prev) => ({ ...prev, platform: e.target.value }))}
-              >
-                <option value="twitter">Twitter / X</option>
-                <option value="linkedin">LinkedIn</option>
-              </Select>
-              <Input
-                placeholder="Source"
-                value={itemForm.source}
-                onChange={(e) => setItemForm((prev) => ({ ...prev, source: e.target.value }))}
-              />
-              <Textarea
-                placeholder="Reference post"
-                value={itemForm.text}
-                onChange={(e) => setItemForm((prev) => ({ ...prev, text: e.target.value }))}
-              />
-              <Button type="submit">Add</Button>
-            </form>
-          </article>
-
-          <article className="formCard">
-            <h4>Competitors</h4>
-            <form className="form" onSubmit={addCreator}>
-              <Input
-                placeholder="Name"
-                value={creatorForm.name}
-                onChange={(e) => setCreatorForm((prev) => ({ ...prev, name: e.target.value }))}
-              />
-              <Input
-                placeholder="Profile URL"
-                value={creatorForm.url}
-                onChange={(e) => setCreatorForm((prev) => ({ ...prev, url: e.target.value }))}
-              />
-              <Select
-                value={creatorForm.platform}
-                onChange={(e) => setCreatorForm((prev) => ({ ...prev, platform: e.target.value }))}
-              >
-                <option value="twitter">Twitter / X</option>
-                <option value="linkedin">LinkedIn</option>
-              </Select>
-              <Button type="submit">Add</Button>
-            </form>
-          </article>
-
-          <article className="formCard span2">
-            <h4>Manual Generator</h4>
-            <form className="form" onSubmit={generate}>
-              <div className="row2">
-                <Select
-                  value={genForm.platform}
-                  onChange={(e) => {
-                    const platform = e.target.value;
-                    setGenForm((prev) => ({ ...prev, platform }));
-                    fetchItems(platform).catch(() => {});
-                  }}
-                >
-                  <option value="twitter">Twitter / X</option>
-                  <option value="linkedin">LinkedIn</option>
-                </Select>
-                <Input
-                  type="number"
-                  min={1}
-                  max={10}
-                  value={genForm.variants}
-                  onChange={(e) =>
-                    setGenForm((prev) => ({
-                      ...prev,
-                      variants: Math.max(1, Math.min(Number(e.target.value || 1), 10)),
-                    }))
-                  }
-                />
-              </div>
-
-              <Textarea
-                placeholder="Brief"
-                value={genForm.brief}
-                onChange={(e) => setGenForm((prev) => ({ ...prev, brief: e.target.value }))}
-              />
-
-              <div className="row2">
-                <Input
-                  placeholder="Audience"
-                  value={genForm.audience}
-                  onChange={(e) => setGenForm((prev) => ({ ...prev, audience: e.target.value }))}
-                />
-                <Input
-                  placeholder="Goal"
-                  value={genForm.goal}
-                  onChange={(e) => setGenForm((prev) => ({ ...prev, goal: e.target.value }))}
-                />
-              </div>
-
-              <Input
-                placeholder="CTA"
-                value={genForm.callToAction}
-                onChange={(e) => setGenForm((prev) => ({ ...prev, callToAction: e.target.value }))}
-              />
-
-              <Button type="submit" disabled={loading.generate}>
-                {loading.generate ? "Generating..." : "Generate"}
-              </Button>
-            </form>
-
-            <div className="drafts">
-              {posts.map((post, idx) => (
-                <div key={`${idx}-${post.hook}`} className="draftItem">
-                  <strong>{post.hook || `Draft ${idx + 1}`}</strong>
-                  <p>{post.post}</p>
+            <div className="space-y-4 p-4">
+              {(status.error || status.success) && (
+                <div className="rounded-md border px-3 py-2 text-sm">
+                  {status.error || status.success}
                 </div>
-              ))}
+              )}
+
+              <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-4">
+                {stats.map((stat) => (
+                  <Card key={stat.label}>
+                    <CardHeader className="pb-2">
+                      <CardTitle className="text-sm font-medium text-muted-foreground">{stat.label}</CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                      <div className="text-3xl font-semibold tracking-tight">{stat.value}</div>
+                      <p className="mt-1 text-xs text-muted-foreground">{stat.sub}</p>
+                    </CardContent>
+                  </Card>
+                ))}
+              </div>
+
+              <Card>
+                <CardHeader className="flex-row items-center justify-between space-y-0">
+                  <div>
+                    <CardTitle>Total Visitors</CardTitle>
+                    <p className="mt-1 text-sm text-muted-foreground">Last 3 months</p>
+                  </div>
+                  <div className="flex gap-2">
+                    <Button variant="outline" size="sm">Last 3 months</Button>
+                    <Button variant="outline" size="sm">Last 30 days</Button>
+                    <Button variant="outline" size="sm">Last 7 days</Button>
+                  </div>
+                </CardHeader>
+                <CardContent>
+                  <div className="h-56 rounded-md border bg-muted/40" />
+                </CardContent>
+              </Card>
+
+              <Card>
+                <CardHeader className="flex-row items-center justify-between space-y-0">
+                  <div className="flex gap-2">
+                    <Button size="sm" variant="secondary">Outline</Button>
+                    <Button size="sm" variant="ghost">Past Performance</Button>
+                    <Button size="sm" variant="ghost">Key Personnel</Button>
+                  </div>
+                  <div className="flex gap-2">
+                    <Button size="sm" variant="outline">Customize Columns</Button>
+                    <Button size="sm" variant="outline">Add Section</Button>
+                  </div>
+                </CardHeader>
+                <CardContent>
+                  <div className="overflow-x-auto">
+                    <table className="w-full text-sm">
+                      <thead className="text-left text-muted-foreground">
+                        <tr className="border-b">
+                          <th className="py-2 pr-3 font-medium">Title</th>
+                          <th className="py-2 pr-3 font-medium">Platform</th>
+                          <th className="py-2 pr-3 font-medium">Status</th>
+                          <th className="py-2 font-medium">Source</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {autoPosts.slice(0, 8).map((post) => (
+                          <tr key={post.id} className="border-b last:border-b-0">
+                            <td className="py-2 pr-3">{post.hook || "Draft"}</td>
+                            <td className="py-2 pr-3">{post.platform}</td>
+                            <td className="py-2 pr-3">Ready</td>
+                            <td className="py-2">Auto</td>
+                          </tr>
+                        ))}
+                        {autoPosts.length === 0 && (
+                          <tr>
+                            <td className="py-3 text-muted-foreground" colSpan={4}>No rows yet</td>
+                          </tr>
+                        )}
+                      </tbody>
+                    </table>
+                  </div>
+                </CardContent>
+              </Card>
+
+              <div className="grid gap-3 lg:grid-cols-2">
+                <Card>
+                  <CardHeader><CardTitle>Knowledge Base</CardTitle></CardHeader>
+                  <CardContent>
+                    <form className="space-y-2" onSubmit={addLibraryItem}>
+                      <Select value={itemForm.platform} onChange={(e) => setItemForm((prev) => ({ ...prev, platform: e.target.value }))}>
+                        <option value="twitter">Twitter / X</option>
+                        <option value="linkedin">LinkedIn</option>
+                      </Select>
+                      <Input placeholder="Source" value={itemForm.source} onChange={(e) => setItemForm((prev) => ({ ...prev, source: e.target.value }))} />
+                      <Textarea placeholder="Reference post" value={itemForm.text} onChange={(e) => setItemForm((prev) => ({ ...prev, text: e.target.value }))} />
+                      <Button type="submit">Add</Button>
+                    </form>
+                  </CardContent>
+                </Card>
+
+                <Card>
+                  <CardHeader><CardTitle>Competitors</CardTitle></CardHeader>
+                  <CardContent>
+                    <form className="space-y-2" onSubmit={addCreator}>
+                      <Input placeholder="Name" value={creatorForm.name} onChange={(e) => setCreatorForm((prev) => ({ ...prev, name: e.target.value }))} />
+                      <Input placeholder="Profile URL" value={creatorForm.url} onChange={(e) => setCreatorForm((prev) => ({ ...prev, url: e.target.value }))} />
+                      <Select value={creatorForm.platform} onChange={(e) => setCreatorForm((prev) => ({ ...prev, platform: e.target.value }))}>
+                        <option value="twitter">Twitter / X</option>
+                        <option value="linkedin">LinkedIn</option>
+                      </Select>
+                      <Button type="submit">Add</Button>
+                    </form>
+                  </CardContent>
+                </Card>
+              </div>
+
+              <Card>
+                <CardHeader><CardTitle>Manual Generator</CardTitle></CardHeader>
+                <CardContent>
+                  <form className="space-y-2" onSubmit={generate}>
+                    <div className="grid gap-2 md:grid-cols-2">
+                      <Select value={genForm.platform} onChange={(e) => { const platform = e.target.value; setGenForm((prev) => ({ ...prev, platform })); fetchItems(platform).catch(() => {}); }}>
+                        <option value="twitter">Twitter / X</option>
+                        <option value="linkedin">LinkedIn</option>
+                      </Select>
+                      <Input type="number" min={1} max={10} value={genForm.variants} onChange={(e) => setGenForm((prev) => ({ ...prev, variants: Math.max(1, Math.min(Number(e.target.value || 1), 10)) }))} />
+                    </div>
+                    <Textarea placeholder="Brief" value={genForm.brief} onChange={(e) => setGenForm((prev) => ({ ...prev, brief: e.target.value }))} />
+                    <div className="grid gap-2 md:grid-cols-2">
+                      <Input placeholder="Audience" value={genForm.audience} onChange={(e) => setGenForm((prev) => ({ ...prev, audience: e.target.value }))} />
+                      <Input placeholder="Goal" value={genForm.goal} onChange={(e) => setGenForm((prev) => ({ ...prev, goal: e.target.value }))} />
+                    </div>
+                    <Input placeholder="CTA" value={genForm.callToAction} onChange={(e) => setGenForm((prev) => ({ ...prev, callToAction: e.target.value }))} />
+                    <Button type="submit" disabled={loading.generate}>{loading.generate ? "Generating..." : "Generate"}</Button>
+                  </form>
+
+                  <Separator className="my-4" />
+
+                  <div className="space-y-2">
+                    {posts.map((post, idx) => (
+                      <div key={`${idx}-${post.hook}`} className="rounded-md border bg-muted/40 p-3">
+                        <strong className="text-sm">{post.hook || `Draft ${idx + 1}`}</strong>
+                        <p className="mt-1 whitespace-pre-wrap text-sm text-muted-foreground">{post.post}</p>
+                      </div>
+                    ))}
+                  </div>
+                </CardContent>
+              </Card>
             </div>
-          </article>
-        </section>
-      </main>
+          </div>
+        </main>
+      </div>
     </div>
   );
 }
