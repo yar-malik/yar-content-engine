@@ -99,7 +99,9 @@ async function generateForPlatform(
     })
   );
 
-  return generated.filter((item): item is AutoPost => Boolean(item));
+  return generated.filter(
+    (item): item is Exclude<(typeof generated)[number], null> => item !== null
+  );
 }
 
 export async function getAutoContent(): Promise<AutoContentResult> {

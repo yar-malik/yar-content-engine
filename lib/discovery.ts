@@ -144,7 +144,7 @@ async function fetchHnQuery(query: string): Promise<ViralTopic[]> {
         createdAt: new Date().toISOString(),
       } satisfies ViralTopic;
     })
-    .filter((item): item is ViralTopic => Boolean(item))
+    .filter((item): item is NonNullable<typeof item> => item !== null)
     .filter((item) => item.score >= 6)
     .sort((a, b) => b.score - a.score)
     .slice(0, 10);
